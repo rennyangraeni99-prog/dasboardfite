@@ -529,39 +529,39 @@
     const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbxFSlDlFx0omwls1DbKoFq7MqwTJugpBzJbaMmqiK35t051vW4dX1evtdqj1K6kHQm75Q/exec";
 
     async function syncAllToGoogleSheets() {
-        try {
-            showToast("🔄 Menyimpan ke Google Sheets...", "#3498db");
-            
-            const dataToSend = projectData.map(item => ({
-                PROKER: item.proker,
-                TAHAPAN: item.tahapan,
-                NO: item.no,
-                KEGIATAN: item.kegiatan,
-                PIC: item.pic,
-                PROGRESS: item.progress,
-                "START DATE": item.startDate,
-                "END DATE": item.endDate,
-                KETERANGAN: item.keterangan
-            }));
-            
-            const response = await fetch(GOOGLE_SHEETS_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "write", data: dataToSend })
-            });
-            
-            const result = await response.json();
-            
-            if (result.success) {
-                showToast("✅ Data berhasil disimpan ke Google Sheets!", "#2ecc71");
-            } else {
-                showToast("⚠️ " + (result.error || "Gagal sync"), "#e74c3c");
-            }
-        } catch(e) {
-            console.error("Sync error:", e);
-            showToast("⚠️ Gagal sync ke Google Sheets, data tetap di local", "#e74c3c");
+    try {
+        showToast("🔄 Menyimpan ke Google Sheets...", "#3498db");
+        
+        const dataToSend = projectData.map(item => ({
+            PROKER: item.proker,
+            TAHAPAN: item.tahapan,
+            NO: item.no,
+            KEGIATAN: item.kegiatan,
+            PIC: item.pic,
+            PROGRESS: item.progress,
+            "START DATE": item.startDate,
+            "END DATE": item.endDate,
+            KETERANGAN: item.keterangan
+        }));
+        
+        const response = await fetch(GOOGLE_SHEETS_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "write", data: dataToSend })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showToast("✅ Data berhasil disimpan ke Google Sheets!", "#2ecc71");
+        } else {
+            showToast("⚠️ " + (result.error || "Gagal sync"), "#e74c3c");
         }
+    } catch(e) {
+        console.error("Sync error:", e);
+        showToast("⚠️ Gagal sync ke Google Sheets, data tetap di local", "#e74c3c");
     }
+}
 
     async function loadAllFromGoogleSheets() {
         try {
