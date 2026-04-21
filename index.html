@@ -683,20 +683,24 @@
     // FUNGSI UTAMA CRUD
     // ============================================================
     function loadData() {
-        const saved = localStorage.getItem('fiteProjectData');
-        if (saved) {
-            projectData = JSON.parse(saved);
-        } else {
-            projectData = JSON.parse(JSON.stringify(defaultData));
-        }
-        loadHistoryFromLocal();
-        if (historyStack.length > 0 && JSON.stringify(historyStack[currentStateIndex]) !== JSON.stringify(projectData)) {
-            saveToHistory();
-            saveDataToLocal();
-        }
-        renderAll();
+    const saved = localStorage.getItem('fiteProjectData');
+    if (saved) {
+        projectData = JSON.parse(saved);
+    } else {
+        projectData = JSON.parse(JSON.stringify(defaultData));
     }
-
+    loadHistoryFromLocal();
+    if (historyStack.length > 0 && JSON.stringify(historyStack[currentStateIndex]) !== JSON.stringify(projectData)) {
+        saveToHistory();
+        saveDataToLocal();
+    }
+    renderAll();
+    
+    // TAMBAHKAN INI: Auto load dari Google Sheets
+    setTimeout(() => {
+        loadAllFromGoogleSheets();
+    }, 500);
+}
     function saveData() { 
         saveDataToLocal();
     }
@@ -723,25 +727,27 @@
     }
 
     async function saveKegiatan(){
-        if(!document.getElementById('inputKegiatan').value.trim()) return alert("Kegiatan wajib diisi!");
-        
-        projectData.push({
-            proker: document.getElementById('inputProker').value,
-            tahapan: document.getElementById('inputTahapan').value,
-            no: document.getElementById('inputNo').value,
-            kegiatan: document.getElementById('inputKegiatan').value,
-            pic: document.getElementById('inputPic').value,
-            progress: parseFloat(document.getElementById('inputProgress').value) || 0,
-            startDate: document.getElementById('inputStartDate').value,
-            endDate: document.getElementById('inputEndDate').value,
-            keterangan: document.getElementById('inputKeterangan').value
-        });
-        
-        recordChangeAndSave("Tambah kegiatan");
-        clearForm(); 
-        renderAll();
-        await syncAllToGoogleSheets();
-    }
+    if(!document.getElementById('inputKegiatan').value.trim()) return alert("Kegiatan wajib diisi!");
+    
+    projectData.push({
+        proker: document.getElementById('inputProker').value,
+        tahapan: document.getElementById('inputTahapan').value,
+        no: document.getElementById('inputNo').value,
+        kegiatan: document.getElementById('inputKegiatan').value,
+        pic: document.getElementById('inputPic').value,
+        progress: parseFloat(document.getElementById('inputProgress').value) || 0,
+        startDate: document.getElementById('inputStartDate').value,
+        endDate: document.getElementById('inputEndDate').value,
+        keterangan: document.getElementById('inputKeterangan').value
+    });
+    
+    recordChangeAndSave("Tambah kegiatan");
+    clearForm(); 
+    renderAll();
+    
+    // TAMBAHKAN INI: Auto save ke Google Sheets
+    await syncAllToGoogleSheets();
+}
 
     async function updateKegiatan(){
         if(currentEditIndex === -1) return;
