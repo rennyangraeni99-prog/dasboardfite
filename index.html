@@ -544,56 +544,60 @@
             KETERANGAN: item.keterangan
         }));
         
-        const response = await fetch(GOOGLE_SHEETS_URL, {
+        // Mode no-cors untuk menghindari CORS error
+        await fetch(GOOGLE_SHEETS_URL, {
             method: "POST",
+            mode: "no-cors",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "write", data: dataToSend })
         });
         
-        const result = await response.json();
+        showToast("✅ Data dikirim ke Google Sheets!", "#2ecc71");
+        showToast("💡 Buka Google Sheets untuk melihat data", "#3498db");
         
-        if (result.success) {
-            showToast("✅ Data berhasil disimpan ke Google Sheets!", "#2ecc71");
-        } else {
-            showToast("⚠️ " + (result.error || "Gagal sync"), "#e74c3c");
-        }
     } catch(e) {
         console.error("Sync error:", e);
-        showToast("⚠️ Gagal sync ke Google Sheets, data tetap di local", "#e74c3c");
+        showToast("⚠️ Gagal sync: " + e.message, "#e74c3c");
     }
 }
 
-    async function loadAllFromGoogleSheets() {
-        try {
-            showToast("🔄 Memuat dari Google Sheets...", "#3498db");
-            const response = await fetch(`${GOOGLE_SHEETS_URL}?action=read`);
-            const result = await response.json();
+   async function loadAllFromGoogleSheets() {
+    try {
+        showToast("🔄 Memuat dari Google Sheets...", "#3498db");
+        
+        const response = await fetch(`${GOOGLE_SHEETS_URL}?action=read`, {
+            method: "GET",
+            headers: { "Accept": "application/json" }
+        });
+        
+        const result = await response.json();
+        console.log("Load result:", result);
+        
+        if (result.success && result.data && result.data.length > 0) {
+            projectData = result.data.map(row => ({
+                proker: row.PROKER || "",
+                tahapan: row.TAHAPAN || "",
+                no: row.NO || "",
+                kegiatan: row.KEGIATAN || "",
+                pic: row.PIC || "",
+                progress: parseFloat(row.PROGRESS) || 0,
+                startDate: row["START DATE"] || "",
+                endDate: row["END DATE"] || "",
+                keterangan: row.KETERANGAN || ""
+            }));
             
-            if (result.success && result.data && result.data.length > 0) {
-                projectData = result.data.map(row => ({
-                    proker: row.PROKER || "",
-                    tahapan: row.TAHAPAN || "",
-                    no: row.NO || "",
-                    kegiatan: row.KEGIATAN || "",
-                    pic: row.PIC || "",
-                    progress: parseFloat(row.PROGRESS) || 0,
-                    startDate: row["START DATE"] || "",
-                    endDate: row["END DATE"] || "",
-                    keterangan: row.KETERANGAN || ""
-                }));
-                
-                saveDataToLocal();
-                renderAll();
-                showToast(`✅ Berhasil memuat ${projectData.length} data dari Google Sheets!`, "#2ecc71");
-            } else {
-                showToast("⚠️ Tidak ada data di Google Sheets, menggunakan data local", "#f39c12");
-            }
-        } catch(e) {
-            console.error("Load error:", e);
-            showToast("⚠️ Gagal memuat dari Google Sheets, menggunakan data local", "#e74c3c");
+            saveDataToLocal();
+            renderAll();
+            showToast(`✅ Load ${projectData.length} data dari Google Sheets!`, "#2ecc71");
+        } else {
+            showToast("⚠️ " + (result.error || "Tidak ada data"), "#f39c12");
         }
+        
+    } catch(e) {
+        console.error("Load error:", e);
+        showToast("⚠️ Gagal load dari Google Sheets, pakai data local", "#e74c3c");
     }
-
+}
     // ============================================================
     // FITUR UNDO (HISTORY)
     // ============================================================
