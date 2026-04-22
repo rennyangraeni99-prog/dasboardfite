@@ -703,11 +703,6 @@
     function saveData() { 
         saveDataToLocal();
     }
-
-    function resetToDefaultData() { 
-        if(confirm("Reset ke data default? Semua perubahan akan hilang. Gunakan Undo jika terlanjur.")){ 
-            projectData = JSON.parse(JSON.stringify(defaultData)); 
-            recordChangeAndSave("Reset ke data default");
             cancelEdit(); 
             renderAll(); 
         } 
