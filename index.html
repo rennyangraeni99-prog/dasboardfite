@@ -424,12 +424,9 @@
     <div class="form-container" id="formContainer">
         <h3 id="formTitle">✏️ Tambah / Edit Kegiatan</h3>
         <div class="form-grid">
-            <div class="form-group"><label>PROKER</label>
-                <select id="inputProker">
-                    <option value="IMPLEMENTASI FITUR PERIZINAN PRINSIP KITE">IMPLEMENTASI FITUR PERIZINAN PRINSIP KITE</option>
-                    <option value="IMPLEMENTASI SSR M KITE">IMPLEMENTASI SSR M KITE</option>
-                    <option value="IMPLEMENTASI BC 2.4 CEISA 4.0">IMPLEMENTASI BC 2.4 CEISA 4.0</option>
-                </select>
+            <div class="form-group">
+                <label>PROKER</label>
+                <input type="text" id="inputProker" placeholder="Contoh: IMPLEMENTASI FITUR PERIZINAN PRINSIP KITE">
             </div>
             <div class="form-group"><label>TAHAPAN</label><input type="text" id="inputTahapan" placeholder="Contoh: PERENCANAAN"></div>
             <div class="form-group"><label>NO</label><input type="text" id="inputNo" placeholder="1,2,3"></div>
@@ -528,75 +525,75 @@
     const GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbxFSlDlFx0omwls1DbKoFq7MqwTJugpBzJbaMmqiK35t051vW4dX1evtdqj1K6kHQm75Q/exec";
 
     async function syncAllToGoogleSheets() {
-    try {
-        showToast("🔄 Menyimpan ke Google Sheets...", "#3498db");
-        
-        const dataToSend = projectData.map(item => ({
-            PROKER: item.proker,
-            TAHAPAN: item.tahapan,
-            NO: item.no,
-            KEGIATAN: item.kegiatan,
-            PIC: item.pic,
-            PROGRESS: item.progress,
-            "START DATE": item.startDate,
-            "END DATE": item.endDate,
-            KETERANGAN: item.keterangan
-        }));
-        
-        // Mode no-cors untuk menghindari CORS error
-        await fetch(GOOGLE_SHEETS_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "write", data: dataToSend })
-        });
-        
-        showToast("✅ Data dikirim ke Google Sheets!", "#2ecc71");
-        showToast("💡 Buka Google Sheets untuk melihat data", "#3498db");
-        
-    } catch(e) {
-        console.error("Sync error:", e);
-        showToast("⚠️ Gagal sync: " + e.message, "#e74c3c");
-    }
-}
-
-   async function loadAllFromGoogleSheets() {
-    try {
-        showToast("🔄 Memuat dari Google Sheets...", "#3498db");
-        
-        const response = await fetch(`${GOOGLE_SHEETS_URL}?action=read`, {
-            method: "GET",
-            headers: { "Accept": "application/json" }
-        });
-        
-        const result = await response.json();
-        console.log("Load result:", result);
-        
-        if (result.success && result.data && result.data.length > 0) {
-            projectData = result.data.map(row => ({
-                proker: row.PROKER || "",
-                tahapan: row.TAHAPAN || "",
-                no: row.NO || "",
-                kegiatan: row.KEGIATAN || "",
-                pic: row.PIC || "",
-                progress: parseFloat(row.PROGRESS) || 0,
-                startDate: row["START DATE"] || "",
-                endDate: row["END DATE"] || "",
-                keterangan: row.KETERANGAN || ""
+        try {
+            showToast("🔄 Menyimpan ke Google Sheets...", "#3498db");
+            
+            const dataToSend = projectData.map(item => ({
+                PROKER: item.proker,
+                TAHAPAN: item.tahapan,
+                NO: item.no,
+                KEGIATAN: item.kegiatan,
+                PIC: item.pic,
+                PROGRESS: item.progress,
+                "START DATE": item.startDate,
+                "END DATE": item.endDate,
+                KETERANGAN: item.keterangan
             }));
             
-            saveDataToLocal();
-            renderAll();
-            showToast(`✅ Load ${projectData.length} data dari Google Sheets!`, "#2ecc71");
-        } else {
-            showToast("⚠️ " + (result.error || "Tidak ada data"), "#f39c12");
+            await fetch(GOOGLE_SHEETS_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "write", data: dataToSend })
+            });
+            
+            showToast("✅ Data dikirim ke Google Sheets!", "#2ecc71");
+            showToast("💡 Buka Google Sheets untuk melihat data", "#3498db");
+            
+        } catch(e) {
+            console.error("Sync error:", e);
+            showToast("⚠️ Gagal sync: " + e.message, "#e74c3c");
         }
-        
-    } catch(e) {
-        console.error("Load error:", e);
-        showToast("⚠️ Gagal load dari Google Sheets, pakai data local", "#e74c3c");
     }
-}
+
+    async function loadAllFromGoogleSheets() {
+        try {
+            showToast("🔄 Memuat dari Google Sheets...", "#3498db");
+            
+            const response = await fetch(`${GOOGLE_SHEETS_URL}?action=read`, {
+                method: "GET",
+                headers: { "Accept": "application/json" }
+            });
+            
+            const result = await response.json();
+            console.log("Load result:", result);
+            
+            if (result.success && result.data && result.data.length > 0) {
+                projectData = result.data.map(row => ({
+                    proker: row.PROKER || "",
+                    tahapan: row.TAHAPAN || "",
+                    no: row.NO || "",
+                    kegiatan: row.KEGIATAN || "",
+                    pic: row.PIC || "",
+                    progress: parseFloat(row.PROGRESS) || 0,
+                    startDate: row["START DATE"] || "",
+                    endDate: row["END DATE"] || "",
+                    keterangan: row.KETERANGAN || ""
+                }));
+                
+                saveDataToLocal();
+                renderAll();
+                showToast(`✅ Load ${projectData.length} data dari Google Sheets!`, "#2ecc71");
+            } else {
+                showToast("⚠️ " + (result.error || "Tidak ada data"), "#f39c12");
+            }
+            
+        } catch(e) {
+            console.error("Load error:", e);
+            showToast("⚠️ Gagal load dari Google Sheets, pakai data local", "#e74c3c");
+        }
+    }
+    
     // ============================================================
     // FITUR UNDO (HISTORY)
     // ============================================================
@@ -682,30 +679,27 @@
     // FUNGSI UTAMA CRUD
     // ============================================================
     function loadData() {
-    const saved = localStorage.getItem('fiteProjectData');
-    if (saved) {
-        projectData = JSON.parse(saved);
-    } else {
-        projectData = JSON.parse(JSON.stringify(defaultData));
+        const saved = localStorage.getItem('fiteProjectData');
+        if (saved) {
+            projectData = JSON.parse(saved);
+        } else {
+            projectData = JSON.parse(JSON.stringify(defaultData));
+        }
+        loadHistoryFromLocal();
+        if (historyStack.length > 0 && JSON.stringify(historyStack[currentStateIndex]) !== JSON.stringify(projectData)) {
+            saveToHistory();
+            saveDataToLocal();
+        }
+        renderAll();
+        
+        // Auto load dari Google Sheets
+        setTimeout(() => {
+            loadAllFromGoogleSheets();
+        }, 500);
     }
-    loadHistoryFromLocal();
-    if (historyStack.length > 0 && JSON.stringify(historyStack[currentStateIndex]) !== JSON.stringify(projectData)) {
-        saveToHistory();
-        saveDataToLocal();
-    }
-    renderAll();
     
-    // TAMBAHKAN INI: Auto load dari Google Sheets
-    setTimeout(() => {
-        loadAllFromGoogleSheets();
-    }, 500);
-}
     function saveData() { 
         saveDataToLocal();
-    }
-            cancelEdit(); 
-            renderAll(); 
-        } 
     }
 
     function getStatusFromProgress(progress) {
@@ -721,27 +715,25 @@
     }
 
     async function saveKegiatan(){
-    if(!document.getElementById('inputKegiatan').value.trim()) return alert("Kegiatan wajib diisi!");
-    
-    projectData.push({
-        proker: document.getElementById('inputProker').value,
-        tahapan: document.getElementById('inputTahapan').value,
-        no: document.getElementById('inputNo').value,
-        kegiatan: document.getElementById('inputKegiatan').value,
-        pic: document.getElementById('inputPic').value,
-        progress: parseFloat(document.getElementById('inputProgress').value) || 0,
-        startDate: document.getElementById('inputStartDate').value,
-        endDate: document.getElementById('inputEndDate').value,
-        keterangan: document.getElementById('inputKeterangan').value
-    });
-    
-    recordChangeAndSave("Tambah kegiatan");
-    clearForm(); 
-    renderAll();
-    
-    // TAMBAHKAN INI: Auto save ke Google Sheets
-    await syncAllToGoogleSheets();
-}
+        if(!document.getElementById('inputKegiatan').value.trim()) return alert("Kegiatan wajib diisi!");
+        
+        projectData.push({
+            proker: document.getElementById('inputProker').value,
+            tahapan: document.getElementById('inputTahapan').value,
+            no: document.getElementById('inputNo').value,
+            kegiatan: document.getElementById('inputKegiatan').value,
+            pic: document.getElementById('inputPic').value,
+            progress: parseFloat(document.getElementById('inputProgress').value) || 0,
+            startDate: document.getElementById('inputStartDate').value,
+            endDate: document.getElementById('inputEndDate').value,
+            keterangan: document.getElementById('inputKeterangan').value
+        });
+        
+        recordChangeAndSave("Tambah kegiatan");
+        clearForm(); 
+        renderAll();
+        await syncAllToGoogleSheets();
+    }
 
     async function updateKegiatan(){
         if(currentEditIndex === -1) return;
@@ -803,14 +795,27 @@
     }
 
     function clearForm(){
-        document.getElementById('inputProker').value = "IMPLEMENTASI FITUR PERIZINAN PRINSIP KITE";
+        document.getElementById('inputProker').value = "";
         document.getElementById('inputTahapan').value = "";
         document.getElementById('inputNo').value = "";
         document.getElementById('inputKegiatan').value = "";
         document.getElementById('inputPic').value = "";
         document.getElementById('inputProgress').value = "0";
-        document.getElementById('inputStartDate').value = new Date().toISOString().slice(0,10);
-        document.getElementById('inputEndDate').value = new Date(Date.now() + 30 * 86400000).toISOString().slice(0,10);
+        
+        // Perbaikan format tanggal (tanpa T17:00:00.000Z)
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        document.getElementById('inputStartDate').value = `${yyyy}-${mm}-${dd}`;
+        
+        const endDate = new Date();
+        endDate.setDate(endDate.getDate() + 30);
+        const yyyy2 = endDate.getFullYear();
+        const mm2 = String(endDate.getMonth() + 1).padStart(2, '0');
+        const dd2 = String(endDate.getDate()).padStart(2, '0');
+        document.getElementById('inputEndDate').value = `${yyyy2}-${mm2}-${dd2}`;
+        
         document.getElementById('inputKeterangan').value = "";
     }
 
