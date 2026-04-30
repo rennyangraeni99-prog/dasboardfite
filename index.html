@@ -396,7 +396,6 @@
             background: #2ecc71;
             color: white;
         }
-        /* Password Modal */
         .password-modal {
             position: fixed;
             top: 0;
@@ -456,7 +455,7 @@
     <div class="sub">Implementasi Fitur Perizinan Prinsip KITE | SSR M KITE | BC 2.4 CEISA 4.0</div>
 
     <div class="action-buttons">
-        <button id="enableEditBtn" onclick="showPasswordModal()" style="background:#2c9b8a;">✏️ Enable Edit Mode</button>
+        <button id="enableEditBtn" onclick="showPasswordModal(null, null)" style="background:#2c9b8a;">✏️ Enable Edit Mode</button>
         <button onclick="loadAllFromGoogleSheets()" style="background:#3498db;">📥 Load dari Google Sheets</button>
         <button onclick="syncAllToGoogleSheets()" style="background:#2c9b8a;" id="syncBtn">☁️ Save ke Google Sheets</button>
         <div class="undo-redo-group">
@@ -685,7 +684,7 @@
         // Ubah tombol kembali
         const enableBtn = document.getElementById('enableEditBtn');
         enableBtn.innerText = "✏️ Enable Edit Mode";
-        enableBtn.onclick = () => showPasswordModal();
+        enableBtn.onclick = () => showPasswordModal(null, null);
         enableBtn.style.background = "#2c9b8a";
         
         // Batalkan edit jika sedang edit
@@ -694,6 +693,18 @@
         }
         
         showToast("🔒 Read Only Mode Aktif. Password diperlukan untuk edit.", "#3498db");
+    }
+
+    // ============================================================
+    // FUNGSI GANTT CHART (DD-MM)
+    // ============================================================
+    function formatDDMM(dateStr) {
+        if (!dateStr) return '';
+        const parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return `${parts[2]}-${parts[1]}`;
+        }
+        return dateStr;
     }
 
     // ============================================================
@@ -1220,7 +1231,7 @@
                 <td class="kegiatan-cell">${kegiatanHtml}</td>
                 <td>${d.pic || ''}</td>
                 <td><span class="progress-badge">${(d.progress || 0)}%</span></td>
-                <td>${d.startDate || ''}</td>
+                <td>${d.startDate || ''}<table>
                 <td>${d.endDate || ''}</td>
                 <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                 <td class="keterangan-cell">${keteranganHtml}</td>
@@ -1248,11 +1259,14 @@
                 let width = Math.min(100 - left, (end - start) / (1000 * 3600 * 24) / totalDays * 100);
                 if (width < 0.5 && width > 0) width = 0.8;
                 let barColor = d.progress >= 100 ? "#2ecc71" : (d.progress > 0 ? "#f39c12" : "#e74c3c");
+                const startShort = formatDDMM(d.startDate);
+                const endShort = formatDDMM(d.endDate);
+                const dateLabel = `${startShort}→${endShort}`;
                 html += `<div class="gantt-row">
                     <div class="gantt-label" title="${d.kegiatan.replace(/"/g, '&quot;')}">${d.no}. ${d.kegiatan.substring(0, 35)}</div>
                     <div class="gantt-bar-container">
                         <div style="background:${barColor}; height:28px; border-radius:12px; margin-left:${left}%; width:${width}%; display:flex; align-items:center; padding-left:8px; color:white; font-size:0.65rem;">
-                            ${width > 8 ? (d.progress || 0) + '%' : ''}
+                            ${width > 8 ? dateLabel : (d.progress || 0) + '%'}
                         </div>
                     </div>
                 </div>`;
