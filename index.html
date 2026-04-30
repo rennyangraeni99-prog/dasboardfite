@@ -143,11 +143,14 @@
         .data-table tr:hover {
             background: #f0f9f6 !important;
         }
+        /* PERBAIKAN: Kolom kegiatan agar multi-line dan rapih */
         .kegiatan-cell {
-            white-space: normal;
-            word-wrap: break-word;
+            white-space: normal !important;
+            word-wrap: break-word !important;
+            word-break: break-word !important;
             max-width: 300px;
             line-height: 1.4;
+            vertical-align: top;
         }
         .keterangan-cell {
             white-space: pre-wrap;
@@ -485,7 +488,7 @@
             <table id="picTable">
                 <thead><tr><th>PIC</th><th>Total Kegiatan</th><th>Rata-rata Progress</th><th>Progres Bar</th></tr></thead>
                 <tbody></tbody>
-            <tr>
+            </table>
         </div>
     </div>
 
@@ -559,7 +562,7 @@
     // ============================================================
     // KONFIGURASI PASSWORD
     // ============================================================
-    const EDIT_PASSWORD = "FITE2026#";  // Ganti dengan password Anda!
+    const EDIT_PASSWORD = "FITE2026#";
     let isEditMode = false;
     let pendingAction = null;
     let pendingActionParams = null;
@@ -605,6 +608,9 @@
     let projectData = [];
     let currentEditIndex = -1;
     let searchQuery = "";
+    let historyStack = [];
+    let currentStateIndex = -1;
+    let maxHistory = 50;
 
     // ============================================================
     // KONEKSI KE GOOGLE SHEETS
@@ -637,12 +643,10 @@
             isEditMode = true;
             closePasswordModal();
             
-            // Update badge
             const badge = document.getElementById('modeBadge');
             badge.innerText = "✏️ Edit Mode";
             badge.className = "mode-badge edit";
             
-            // Ubah tombol
             const enableBtn = document.getElementById('enableEditBtn');
             enableBtn.innerText = "🔒 Disable Edit Mode";
             enableBtn.onclick = disableEditMode;
@@ -650,7 +654,6 @@
             
             showToast("✅ Edit Mode aktif! Anda sekarang bisa mengedit data.", "#2ecc71");
             
-            // Jalankan action yang tertunda
             if (pendingAction) {
                 if (pendingAction === 'edit' && pendingActionParams !== undefined) {
                     executeEditKegiatan(pendingActionParams);
@@ -676,23 +679,40 @@
     function disableEditMode() {
         isEditMode = false;
         
-        // Update badge
         const badge = document.getElementById('modeBadge');
         badge.innerText = "🔒 Read Only";
         badge.className = "mode-badge readonly";
         
-        // Ubah tombol kembali
         const enableBtn = document.getElementById('enableEditBtn');
         enableBtn.innerText = "✏️ Enable Edit Mode";
         enableBtn.onclick = function() { showPasswordModal(null, null); };
         enableBtn.style.background = "#2c9b8a";
         
-        // Batalkan edit jika sedang edit
         if (currentEditIndex !== -1) {
             cancelEdit();
         }
         
         showToast("🔒 Read Only Mode Aktif. Password diperlukan untuk edit.", "#3498db");
+    }
+
+    // ============================================================
+    // FUNGSI FORMAT TANGGAL
+    // ============================================================
+    function formatDate(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+
+    function getTodayDate() {
+        return formatDate(new Date());
+    }
+
+    function getFutureDate(days) {
+        const date = new Date();
+        date.setDate(date.getDate() + days);
+        return formatDate(date);
     }
 
     // ============================================================
@@ -775,24 +795,17 @@
     // ============================================================
     // FITUR UNDO (HISTORY)
     // ============================================================
-    let historyStack = [];
-    let currentStateIndex = -1;
-    let maxHistory = 50;
-
     function saveToHistory() {
         const currentSnapshot = JSON.parse(JSON.stringify(projectData));
-        
         if (currentStateIndex < historyStack.length - 1) {
             historyStack = historyStack.slice(0, currentStateIndex + 1);
         }
-        
         historyStack.push(currentSnapshot);
         if (historyStack.length > maxHistory) {
             historyStack.shift();
         } else {
             currentStateIndex = historyStack.length - 1;
         }
-        
         updateUndoButtonState();
         saveHistoryToLocal();
     }
@@ -808,7 +821,7 @@
             saveDataToLocal();
             cancelEdit();
             renderAll();
-            showToast("↩️ Undo berhasil! Kembali ke langkah sebelumnya", "#d69e2e");
+            showToast("↩️ Undo berhasil!", "#d69e2e");
         } else {
             showToast("⚠️ Tidak ada langkah yang bisa di-undo", "#e74c3c");
         }
@@ -895,7 +908,6 @@
         return "status-belum";
     }
 
-    // Fungsi yang memerlukan verifikasi password
     function saveKegiatan() {
         if (!isEditMode) {
             showPasswordModal('save');
@@ -1015,20 +1027,8 @@
         document.getElementById('inputKegiatan').value = "";
         document.getElementById('inputPic').value = "";
         document.getElementById('inputProgress').value = "0";
-        
-        const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        document.getElementById('inputStartDate').value = `${yyyy}-${mm}-${dd}`;
-        
-        const endDate = new Date();
-        endDate.setDate(endDate.getDate() + 30);
-        const yyyy2 = endDate.getFullYear();
-        const mm2 = String(endDate.getMonth() + 1).padStart(2, '0');
-        const dd2 = String(endDate.getDate()).padStart(2, '0');
-        document.getElementById('inputEndDate').value = `${yyyy2}-${mm2}-${dd2}`;
-        
+        document.getElementById('inputStartDate').value = getTodayDate();
+        document.getElementById('inputEndDate').value = getFutureDate(30);
         document.getElementById('inputKeterangan').value = "";
     }
 
@@ -1197,7 +1197,7 @@
         for (let [pic, data] of picMap.entries()) {
             let avg = data.total === 0 ? 0 : (data.totalProgress / data.total);
             picBody.innerHTML += `<tr>
-                <td>${pic}</td>
+                <td>${pic}<td>
                 <td>${data.total}</td>
                 <td>${avg.toFixed(1)}%</td>
                 <td><div class="progress-bar-bg"><div class="progress-fill" style="width:${avg}%"></div></div></td>
@@ -1216,7 +1216,7 @@
                 <td>${d.proker || ''}</td>
                 <td>${d.tahapan || ''}</td>
                 <td>${d.no || ''}</td>
-                <td class="kegiatan-cell">${kegiatanHtml}</td>
+                <td class="kegiatan-cell" style="white-space: normal; word-wrap: break-word;">${kegiatanHtml}</td>
                 <td>${d.pic || ''}</td>
                 <td><span class="progress-badge">${(d.progress || 0)}%</span></td>
                 <td>${d.startDate || ''}</td>
